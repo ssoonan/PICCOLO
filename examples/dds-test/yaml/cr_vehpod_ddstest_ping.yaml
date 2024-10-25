@@ -10,6 +10,6 @@ spec:
   podSpec:
     containers:
     - name: ping-container
-      image: sdv.lge.com/library/dds-test/ping:1.0 
+      image: ssoonan0770/dds-test:arm_ping
     nodeSelector:
       name: "master"

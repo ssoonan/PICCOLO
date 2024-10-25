@@ -4,12 +4,12 @@ metadata:
   name: ddstest-pong
 spec:
   devContainerIdx: 1
-  vehContainerConfigInfo: ['dds-domain-id-b']
+  vehContainerConfigInfo: ['dds-domain-id-a']
   vehContainerConfigIdx: 1
   appType: system
   podSpec:
     containers:
     - name: pong-container
-      image: sdv.lge.com/library/dds-test/pong:1.0 
+      image: ssoonan0770/dds-test:arm_pong
     nodeSelector:
       name: "master"
