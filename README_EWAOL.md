@@ -4,20 +4,27 @@ Hence, the guide cannot apply in EWAOL architecture.
 
 ## Test it out
 EWAOL does not contain commands like `git, apt-get, make`.  
-Therefore, after configuring it through Raspberry Pi, you use the method of copying it through `scp`.
+Therefore, after building it for the Arm architecture, the resulting output needs to be transferred using `scp`.
 
-### Configuration in Raspberry Pi
+### Configuration in x86
 
-1. Build and push controller container image:
-
-```
-make docker-build docker-push IMG=<some-registry>/piccolo:tag
-```
-
-2. Configure `yaml` file:
+1. Build and push controller container image for multi platform:
 
 ```
-make dry-run IMG=<some-registry>/piccolo:tag
+make docker-buildx docker-push IMG=<some-registry>/piccolo:tag
+```
+
+2. Build and push dds container image for multi platform:
+
+```
+docker buildx build --platform linux/arm64 -t <some-registry>/dds-test:tag . -f Dockerfile_ping
+docker buildx build --platform linux/arm64 -t <some-registry>/dds-test:tag . -f Dockerfile_pong
+```
+
+3. Configure `yaml` file:
+
+```
+make dry-run IMG=<some-registry>/piccolo:tag # modifying manifest.yaml
 ```
 
 3. Copy `piccolo`  folder to EWAOL:
