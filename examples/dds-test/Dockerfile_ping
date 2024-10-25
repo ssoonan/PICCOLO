@@ -1,32 +1,47 @@
-FROM alpine:latest AS build
+# 빌드 단계
+FROM debian:bullseye-slim AS build
 
-RUN apk update && apk add git && apk add cmake && apk add --no-cache build-base && \
-    apk add maven && apk fetch openjdk8 && apk add openjdk8 && apk add linux-headers && \
-    apk add bash
+# 필요한 패키지 설치
+RUN apt-get update && apt-get install -y \
+    git \
+    cmake \
+    build-essential \
+    maven \
+    openjdk-11-jdk \
+    bash
 
+# CycloneDDS 소스 코드를 가져오고 빌드
 WORKDIR /src/
 RUN git clone https://github.com/eclipse-cyclonedds/cyclonedds.git
-WORKDIR /dds/
-WORKDIR /src/cyclonedds/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=/dds/ .. && \
-    cmake --build . && cmake --build . --target install
 
+WORKDIR /src/cyclonedds/build
+RUN cmake -DCMAKE_INSTALL_PREFIX=/dds/ ..
+RUN cmake --build .
+RUN cmake --build . --target install
+
+# CycloneDDS-CXX 소스 코드를 가져오고 빌드
 WORKDIR /src/
 RUN git clone https://github.com/eclipse-cyclonedds/cyclonedds-cxx.git
+
 WORKDIR /src/cyclonedds-cxx/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=/dds/ -DCMAKE_PREFIX_PATH=/dds/ .. && \
-    cmake --build . && cmake --build . --target install
+RUN cmake -DCMAKE_INSTALL_PREFIX=/dds/ -DCMAKE_PREFIX_PATH=/dds/ ..
+RUN cmake --build .
+RUN cmake --build . --target install
 
+# 런타임 단계
+FROM debian:bullseye-slim
 
-FROM alpine:latest
+# 필요한 패키지 설치
+RUN apt-get update && apt-get install -y bash cmake build-essential
 
-RUN apk update && apk add bash && apk add cmake && apk add --no-cache build-base
+# 빌드한 CycloneDDS와 CycloneDDS-CXX를 복사
 WORKDIR /dds/
 COPY --from=build /dds/ /dds/
 
+# 앱 소스 코드 복사 및 빌드
 COPY app/ /app
-WORKDIR /app/result
 WORKDIR /app/build
 RUN cmake -DCMAKE_PREFIX_PATH=/dds/ .. && cmake --build .
 
-CMD ./cxxRoundtripPing
+# 실행 명령어 설정
+CMD ["./cxxRoundtripPing"]
